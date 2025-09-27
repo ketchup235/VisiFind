@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voice Search - Accessible Search Interface</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="voice-indicator-container" role="status" aria-live="polite">
+        <button
+          id="voice-indicator"
+          class="voice-indicator"
+          aria-label="Click to start or stop voice recognition"
+          title="Voice recognition - click to toggle or press spacebar"
+        >
+          <div class="pulse-ring"></div>
+          <div class="pulse-ring"></div>
+          <div class="pulse-ring"></div>
+        </button>
+      </div>
+
+      <div class="input-fallback" id="input-fallback">
+        <label for="text-search-input" class="input-label"
+          >Enter your search query:</label
+        >
+        <div class="input-group">
+          <input
+            type="text"
+            id="text-search-input"
+            class="text-input"
+            placeholder="Type your search query here..."
+            aria-describedby="input-help"
+          />
+          <button id="search-button" class="search-button" type="button">
+            Search
+          </button>
+        </div>
+        <small id="input-help" class="input-help">
+          You can also use commands like "select result 1" or "add result 2"
+        </small>
+      </div>
+
+      <div
+        id="audio-feedback"
+        class="audio-feedback"
+        role="status"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <span id="feedback-text">Initializing voice search interface...</span>
+        <div class="help-text">
+          <small
+            >💡 Voice commands: "search for [topic]", "select result [number]",
+            "add result [number]". Press spacebar or click the circle to toggle
+            voice recognition.</small
+          >
+        </div>
+      </div>
+
+      <main id="main-content" class="main-content">
+        <section
+          class="results-section"
+          aria-labelledby="search-results-heading"
+        >
+          <h1 id="search-results-heading" class="section-heading">
+            Search Results
+          </h1>
+          <div
+            id="search-results"
+            class="results-list"
+            role="region"
+            aria-live="polite"
+          >
+            <p class="loading-text">
+              Say "search for [your query]" or enter text above to get
+              started...
+            </p>
+          </div>
+        </section>
+
+        <section
+          class="results-section"
+          aria-labelledby="filtered-results-heading"
+        >
+          <h2 id="filtered-results-heading" class="section-heading">
+            Results of Interest
+          </h2>
+          <div
+            id="filtered-results"
+            class="results-list"
+            role="region"
+            aria-live="polite"
+          >
+            <p class="empty-state">
+              No results selected yet. Say or type "add result" followed by a
+              number to add items here.
+            </p>
+          </div>
+        </section>
+
+        <section class="content-section" aria-labelledby="content-heading">
+          <h2 id="content-heading" class="section-heading">Content</h2>
+          <div
+            id="main-content-area"
+            class="content-area"
+            role="region"
+            aria-live="polite"
+          >
+            <p class="empty-state">Select a result to view its content here.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
