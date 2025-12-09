@@ -37,12 +37,12 @@ class VoiceSearchApp {
         this.recognition.onstart = () => {
           this.isListening = true
           this.voiceIndicator.classList.add("listening")
-          this.updateFeedback("🎤 Listening...")
+          this.updateFeedback("Listening")
         }
 
         this.recognition.onresult = (event) => {
           const transcript = event.results[0][0].transcript
-          console.log("[v0] Voice input received:", transcript)
+          console.log("Voice input received:", transcript)
           this.processCommand(transcript)
         }
 
@@ -52,7 +52,7 @@ class VoiceSearchApp {
         }
 
         this.recognition.onerror = (event) => {
-          console.log("[v0] Speech recognition error:", event.error)
+          console.log("Speech recognition error:", event.error)
           this.isListening = false
           this.voiceIndicator.classList.remove("listening")
 
@@ -70,13 +70,13 @@ class VoiceSearchApp {
         }
 
         this.voiceSupported = true
-        console.log("[v0] Voice recognition initialized successfully")
+        console.log("Voice recognition initialized successfully")
       } catch (error) {
-        console.log("[v0] Voice recognition initialization failed:", error)
+        console.log("Voice recognition initialization failed:", error)
         this.showVoiceFallback("Voice recognition not supported. Using text input.")
       }
     } else {
-      console.log("[v0] Speech recognition not supported in this browser")
+      console.log("Speech recognition not supported in this browser")
       this.showVoiceFallback("Voice recognition not supported in this browser. Using text input.")
     }
   }
@@ -109,7 +109,7 @@ class VoiceSearchApp {
     try {
       this.recognition.start()
     } catch (error) {
-      console.log("[v0] Failed to start recognition:", error)
+      console.log("Failed to start recognition:", error)
       this.showVoiceFallback("Voice recognition error. Using text input.")
     }
   }
@@ -133,7 +133,7 @@ class VoiceSearchApp {
 
   processCommand(command) {
     const lowerCommand = command.toLowerCase()
-    console.log("[v0] Processing command:", lowerCommand)
+    console.log("Processing command:", lowerCommand)
 
     this.announceHeardCommand(command, () => {
       if (lowerCommand.includes("search for") || lowerCommand.includes("find")) {
@@ -198,7 +198,7 @@ class VoiceSearchApp {
     if (!query) return
 
     this.currentQuery = query
-    this.updateFeedback(`🔍 Searching for "${query}"...`)
+    this.updateFeedback(`Searching for "${query}"`)
 
     try {
       const response = await fetch("/api/search", {
@@ -212,12 +212,12 @@ class VoiceSearchApp {
       if (data.success) {
         this.searchResults = data.results
         this.displaySearchResults()
-        this.updateFeedback(`✅ Found ${data.results.length} results. Say "select result 1" to view the first one.`)
+        this.updateFeedback(`Found ${data.results.length} results. Say "select result 1" to view the first one.`)
       } else {
         this.showError("Search failed. Please try again.")
       }
     } catch (error) {
-      console.log("[v0] Search error:", error)
+      console.log("Search error:", error)
       this.showError("Network error. Please check your connection.")
     }
   }
@@ -256,7 +256,7 @@ class VoiceSearchApp {
   async selectResult(resultNumber) {
     if (!resultNumber || resultNumber < 1 || resultNumber > this.searchResults.length) {
       this.updateFeedback(
-        "❌ Invalid result number. Try saying 'select result 1' through 'select result " +
+        "Invalid result number. Try saying 'select result 1' through 'select result " +
           this.searchResults.length +
           "'",
       )
@@ -264,7 +264,7 @@ class VoiceSearchApp {
     }
 
     const result = this.searchResults[resultNumber - 1]
-    this.updateFeedback(`📖 Opening "${result.title}"...`)
+    this.updateFeedback(`Opening "${result.title}"...`)
 
     this.searchResultsContainer.querySelectorAll(".result-item").forEach((item, index) => {
       item.classList.toggle("selected", index === resultNumber - 1)
@@ -276,7 +276,7 @@ class VoiceSearchApp {
 
       if (data.success) {
         this.displayContent(data.content)
-        this.updateFeedback(`📄 Now reading "${data.content.title}"`)
+        this.updateFeedback(`Now reading "${data.content.title}"`)
         this.speakContent(data.content.content)
       } else {
         this.showError("Failed to load content.")
@@ -296,20 +296,20 @@ class VoiceSearchApp {
 
   addToFiltered(resultNumber) {
     if (!resultNumber || resultNumber < 1 || resultNumber > this.searchResults.length) {
-      this.updateFeedback("❌ Invalid result number. Please try again.")
+      this.updateFeedback("Invalid result number. Please try again.")
       return
     }
 
     const result = this.searchResults[resultNumber - 1]
 
     if (this.filteredResults.find((r) => r.id === result.id)) {
-      this.updateFeedback(`⚠️ "${result.title}" is already saved`)
+      this.updateFeedback(`"${result.title}" is already saved`)
       return
     }
 
     this.filteredResults.push(result)
     this.displayFilteredResults()
-    this.updateFeedback(`✅ Saved "${result.title}" to your collection`)
+    this.updateFeedback(`Saved "${result.title}" to your collection`)
   }
 
   displayFilteredResults() {
@@ -342,7 +342,7 @@ class VoiceSearchApp {
     this.filteredResultsContainer.innerHTML = `<p class="empty-state">No results selected yet. ${this.voiceSupported ? "Say" : "Type"} "add result" followed by a number to add items here.</p>`
     this.mainContentArea.innerHTML = '<p class="empty-state">Select a result to view its content here.</p>'
 
-    this.updateFeedback("🗑️ Results cleared - ready for new search")
+    this.updateFeedback("Results cleared - ready for new search")
   }
 
   speakContent(text) {
@@ -356,7 +356,7 @@ class VoiceSearchApp {
 
       utterance.onend = () => {
         setTimeout(() => {
-          this.updateFeedback("🎤 Ready for your next command")
+          this.updateFeedback("Ready for your next command")
         }, 500)
       }
 
@@ -370,10 +370,10 @@ class VoiceSearchApp {
   }
 
   showError(message) {
-    this.updateFeedback(`❌ ${message}`)
+    this.updateFeedback(`${message}`)
 
     setTimeout(() => {
-      this.updateFeedback("🎤 Ready for your next search")
+      this.updateFeedback("Ready for your next search")
     }, 4000)
   }
 
@@ -433,7 +433,6 @@ class VoiceSearchApp {
       utterance.volume = 0.8
 
       utterance.onend = () => {
-        // Execute the command
         callback()
 
         setTimeout(() => {
@@ -475,6 +474,6 @@ class VoiceSearchApp {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("[v0] Initializing Voice Search App")
+  console.log("Initializing Voice Search App")
   new VoiceSearchApp()
 })
