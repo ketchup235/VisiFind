@@ -1,5 +1,4 @@
-
-
+# imports
 import logging
 import uuid
 import requests
@@ -12,9 +11,11 @@ import os
 
 load_dotenv()
 
+# create flask instance and enable CORS (Cross-Origin Resource Sharing)
 app = Flask(__name__)
 CORS(app)  
 
+# set logger to INFO level to see more detailed logs
 logging.basicConfig(level=logging.INFO)
 app.logger.setLevel(logging.INFO)
 
@@ -28,7 +29,10 @@ def index():
 @app.route('/api/search', methods=['POST'])
 def search():
     try:
+        # get json data from frontend
         data = request.get_json()
+        
+        # check for issues with the request
         if not data or 'query' not in data:
             app.logger.error("Invalid request: missing query parameter")
             return jsonify({
@@ -47,6 +51,7 @@ def search():
         app.logger.info(f"Searching for: {query}")
 
         try:
+            # get 10 search results from DuckDuckGo
             with DDGS() as ddgs:
                 raw_results = list(ddgs.text(query, max_results=10))
                 
@@ -58,10 +63,13 @@ def search():
                 "success": False,
                 "error": f"Search service unavailable: {str(search_error)}"
             }), 503
+            
+        # list that will be filled with clean results
         processed_results = []
         
         for result in raw_results:
             try:
+                # create unique ID, get title, get body text, and get url for each result
                 result_id = uuid.uuid4().hex
                 title = result.get('title', 'No Title')
                 snippet = result.get('body', result.get('snippet', 'No description available'))
@@ -69,6 +77,8 @@ def search():
                 
                 if not url:
                     continue
+                
+                # create dict for each result
                 processed_result = {
                     "id": result_id,
                     "title": title,
@@ -82,6 +92,7 @@ def search():
                     "url": url
                 }
                 
+                # append processed result to list
                 processed_results.append(processed_result)
                 
             except Exception as process_error:
@@ -90,6 +101,7 @@ def search():
 
         app.logger.info(f"Processed {len(processed_results)} results successfully")
         
+        # handle if not results are found
         if not processed_results:
             app.logger.info("No results found for query")
             return jsonify({
@@ -97,7 +109,7 @@ def search():
                 "results": [],
                 "message": f"No results found for '{query}'. Try different search terms."
             })
-        
+        # return processed results as json
         return jsonify({
             "success": True,
             "results": processed_results
@@ -130,6 +142,7 @@ def get_content(content_id):
         app.logger.info(f"Attempting to fetch full content from: {url}")
 
         try:
+            # use realistic user agent to avoid blocks from website
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
@@ -137,6 +150,7 @@ def get_content(content_id):
             response = requests.get(url, timeout=6, headers=headers)
             response.raise_for_status()
             
+            # parse HTML using beautifulsoup
             soup = BeautifulSoup(response.text, 'html.parser')
             
             for script in soup(["script", "style", "nav", "header", "footer", "aside"]):
@@ -147,10 +161,12 @@ def get_content(content_id):
             main_content = soup.find('main') or soup.find('article')
             
             if main_content:
+                # extract text from main or article tag
                 extracted_text = main_content.get_text(separator=' ', strip=True)
                 app.logger.info("Extracted content from main/article tag")
                 
             else:
+                # extract text from first few paragraphs
                 paragraphs = soup.find_all('p')
                 if paragraphs:
                     paragraph_texts = []
@@ -193,6 +209,7 @@ def get_content(content_id):
             app.logger.warning(f"Content extraction failed for {url}: {str(extract_error)}")
             content_text = fallback_content + " (Note: Content extraction failed)"
 
+        # return wesbite content as json
         return jsonify({
             "success": True,
             "content": {
@@ -215,7 +232,7 @@ def not_found(error):
         "success": False,
         "error": "Endpoint not found"
     }), 404
-
+    
 @app.errorhandler(500)
 def internal_error(error):
     app.logger.error(f"Internal server error: {str(error)}")
@@ -224,6 +241,7 @@ def internal_error(error):
         "error": "Internal server error"
     }), 500
 
+# run app
 if __name__ == '__main__':
     app.logger.info("Starting VisiFind Flask server...")
     app.logger.info("No API keys required - using free DuckDuckGo search!")
