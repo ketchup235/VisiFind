@@ -1,12 +1,13 @@
 class VoiceSearchApp {
   constructor() {
+    // initialize instance variables
     this.searchResults = []
     this.filteredResults = []
     this.currentQuery = ""
     this.recognition = null
     this.isListening = false
     this.voiceSupported = false
-
+    // initialize UI elements and voice recognition
     this.initializeElements()
     this.initializeVoiceRecognition()
     this.setupEventListeners()
@@ -25,15 +26,17 @@ class VoiceSearchApp {
   }
 
   initializeVoiceRecognition() {
+    // assign voice recognition based on which one browser supports
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
 
       try {
+        // configure recognition settings and event handlers
         this.recognition = new SpeechRecognition()
         this.recognition.continuous = false
         this.recognition.interimResults = false
         this.recognition.lang = "en-US"
-
+        // when recognition starts, start listening
         this.recognition.onstart = () => {
           this.isListening = true
           this.voiceIndicator.classList.add("listening")
@@ -41,16 +44,17 @@ class VoiceSearchApp {
         }
 
         this.recognition.onresult = (event) => {
+          // get transcript of recognized speech
           const transcript = event.results[0][0].transcript
           console.log("Voice input received:", transcript)
           this.processCommand(transcript)
         }
-
+        // when recognition ends, stop listening
         this.recognition.onend = () => {
           this.isListening = false
           this.voiceIndicator.classList.remove("listening")
         }
-
+        // deal with different error types
         this.recognition.onerror = (event) => {
           console.log("Speech recognition error:", event.error)
           this.isListening = false
@@ -81,11 +85,12 @@ class VoiceSearchApp {
     }
   }
 
+  // initialize user interface
   initializeInterface() {
     if (this.voiceSupported) {
       this.voiceIndicator.style.display = "flex"
       this.inputFallback.style.display = "none"
-      this.updateFeedback("Ready to search - speak your query")
+      this.updateFeedback("Ready to search. Speak your query")
       this.startListening()
     } else {
       this.showVoiceFallback("Using text-based search interface.")
@@ -95,6 +100,7 @@ class VoiceSearchApp {
       '<p class="loading-text">Say "search for [your query]" or enter text above to get started...</p>'
   }
 
+  // fallback to text input if voice recognition fails
   showVoiceFallback(message) {
     this.voiceSupported = false
     this.voiceIndicator.style.display = "none"
@@ -103,6 +109,7 @@ class VoiceSearchApp {
     this.textSearchInput.focus()
   }
 
+  // start voice recognition
   startListening() {
     if (!this.voiceSupported || this.isListening || !this.recognition) return
 
@@ -114,12 +121,14 @@ class VoiceSearchApp {
     }
   }
 
+  // stop voice recognition
   stopListening() {
     if (this.recognition && this.isListening) {
       this.recognition.stop()
     }
   }
 
+  // process text input from fallback
   processTextInput() {
     const query = this.textSearchInput.value.trim()
     if (!query) {
@@ -131,11 +140,13 @@ class VoiceSearchApp {
     this.textSearchInput.value = ""
   }
 
+  // process voice or text command
   processCommand(command) {
     const lowerCommand = command.toLowerCase()
     console.log("Processing command:", lowerCommand)
 
     this.announceHeardCommand(command, () => {
+      // look for certain keywords to determine next steps
       if (lowerCommand.includes("search for") || lowerCommand.includes("find")) {
         const query = this.extractSearchQuery(lowerCommand)
         this.performSearch(query)
@@ -153,6 +164,7 @@ class VoiceSearchApp {
     })
   }
 
+  // extract search query from command
   extractSearchQuery(command) {
     const patterns = [/search for (.+)/i, /find (.+)/i, /look for (.+)/i]
 
@@ -166,6 +178,7 @@ class VoiceSearchApp {
     return command
   }
 
+  // extract number from command
   extractNumber(command) {
     const numberWords = {
       one: 1,
@@ -194,6 +207,7 @@ class VoiceSearchApp {
     return 1
   }
 
+  // perform search with given query
   async performSearch(query) {
     if (!query) return
 
@@ -201,6 +215,7 @@ class VoiceSearchApp {
     this.updateFeedback(`Searching for "${query}"`)
 
     try {
+      // send search request to backend
       const response = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -222,6 +237,7 @@ class VoiceSearchApp {
     }
   }
 
+  // display search results in frontend
   displaySearchResults() {
     if (this.searchResults.length === 0) {
       this.searchResultsContainer.innerHTML = '<p class="empty-state">No results found.</p>'
@@ -253,6 +269,7 @@ class VoiceSearchApp {
     })
   }
 
+  // selecting result to view content of website
   async selectResult(resultNumber) {
     if (!resultNumber || resultNumber < 1 || resultNumber > this.searchResults.length) {
       this.updateFeedback(
@@ -282,11 +299,12 @@ class VoiceSearchApp {
         this.showError("Failed to load content.")
       }
     } catch (error) {
-      console.log("[v0] Content loading error:", error)
+      console.log("[Content loading error:", error)
       this.showError("Error loading content.")
     }
   }
 
+  // display content in main area
   displayContent(content) {
     this.mainContentArea.innerHTML = `
       <h3 class="content-title">${content.title}</h3>
@@ -294,6 +312,7 @@ class VoiceSearchApp {
     `
   }
 
+  // add certain result to filtered collection
   addToFiltered(resultNumber) {
     if (!resultNumber || resultNumber < 1 || resultNumber > this.searchResults.length) {
       this.updateFeedback("Invalid result number. Please try again.")
@@ -312,6 +331,7 @@ class VoiceSearchApp {
     this.updateFeedback(`Saved "${result.title}" to your collection`)
   }
 
+  // display filtered results
   displayFilteredResults() {
     if (this.filteredResults.length === 0) {
       this.filteredResultsContainer.innerHTML = `<p class="empty-state">No results selected yet. ${this.voiceSupported ? "Say" : "Type"} "add result" followed by a number to add items here.</p>`
@@ -333,6 +353,7 @@ class VoiceSearchApp {
     this.filteredResultsContainer.innerHTML = resultsHTML
   }
 
+  // clear all results and reset state
   clearResults() {
     this.searchResults = []
     this.filteredResults = []
@@ -345,6 +366,7 @@ class VoiceSearchApp {
     this.updateFeedback("Results cleared - ready for new search")
   }
 
+  // use speech synthesis to read content aloud
   speakContent(text) {
     if ("speechSynthesis" in window) {
       speechSynthesis.cancel()
@@ -364,11 +386,13 @@ class VoiceSearchApp {
     }
   }
 
+  // update feedback text in frontend
   updateFeedback(message) {
     this.feedbackText.textContent = message
     console.log("[v0] Feedback:", message)
   }
 
+  // show error message in feedback
   showError(message) {
     this.updateFeedback(`${message}`)
 
@@ -386,6 +410,11 @@ class VoiceSearchApp {
       }
     })
 
+    this.searchButton.addEventListener("click", () => {
+      this.processTextInput()
+    })
+
+    // spacebar to start/stop listening, escape to stop all audio, enter to submit text input
     document.addEventListener("keydown", (e) => {
       if (e.key === " " && e.target === document.body) {
         e.preventDefault()
@@ -409,10 +438,6 @@ class VoiceSearchApp {
       }
     })
 
-    this.searchButton.addEventListener("click", () => {
-      this.processTextInput()
-    })
-
     this.textSearchInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault()
@@ -421,6 +446,7 @@ class VoiceSearchApp {
     })
   }
 
+  // announce heard command and proceed with callback
   announceHeardCommand(command, callback) {
     this.updateFeedback(`You said: "${command}"`)
 
@@ -449,6 +475,7 @@ class VoiceSearchApp {
     }
   }
 
+  // announce that website is listening
   announceListening() {
     this.updateFeedback("Listening...")
 
@@ -473,6 +500,7 @@ class VoiceSearchApp {
   }
 }
 
+// initialize app when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Initializing Voice Search App")
   new VoiceSearchApp()
