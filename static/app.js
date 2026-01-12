@@ -5,8 +5,6 @@ class VoiceSearchApp {
     this.filteredResults = []
     this.currentQuery = ""
     this.recognition = null
-    this.isListening = false
-    this.isSpeaking = false
     this.voiceSupported = false
     // initialize UI elements and voice recognition
     this.initializeElements()
@@ -262,7 +260,7 @@ class VoiceSearchApp {
     this.searchResultsContainer.querySelectorAll(".result-item").forEach((item, index) => {
       item.addEventListener("click", () => this.selectResult(index + 1))
       item.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
+        if (e.key === "Enter") {
           e.preventDefault()
           this.selectResult(index + 1)
         }
@@ -296,7 +294,6 @@ class VoiceSearchApp {
         this.displayContent(data.content)
         this.updateFeedback(`Now reading "${data.content.title}"`)
         this.speakContent(data.content.content)
-        this.isSpeaking = false
       } else {
         this.showError("Failed to load content.")
       }
@@ -360,7 +357,6 @@ class VoiceSearchApp {
     this.searchResults = []
     this.filteredResults = []
     this.currentQuery = ""
-
     this.searchResultsContainer.innerHTML = `<p class="loading-text">${this.voiceSupported ? 'Say "search for [your query]"' : "Enter a search query above"} to get started...</p>`
     this.filteredResultsContainer.innerHTML = `<p class="empty-state">No results selected yet. ${this.voiceSupported ? "Say" : "Type"} "add result" followed by a number to add items here.</p>`
     this.mainContentArea.innerHTML = '<p class="empty-state">Select a result to view its content here.</p>'
@@ -384,9 +380,7 @@ class VoiceSearchApp {
         }, 500)
       }
 
-      this.isSpeaking = true
       speechSynthesis.speak(utterance)
-      this.isSpeaking = false
     }
   }
 
@@ -407,10 +401,8 @@ class VoiceSearchApp {
 
   setupEventListeners() {
     this.voiceIndicator.addEventListener("click", () => {
-      if (this.isSpeaking) {
-        speechSynthesis.cancel()
-        this.isSpeaking = false
-      }
+      speechSynthesis.cancel()
+
       if (this.isListening) {
         this.stopListening()
       } else {
@@ -426,10 +418,8 @@ class VoiceSearchApp {
     document.addEventListener("keydown", (e) => {
       if (e.key === " " && e.target === document.body) {
         e.preventDefault()
-        if (this.isSpeaking) {
-          speechSynthesis.cancel()
-          this.isSpeaking = false
-        }
+        speechSynthesis.cancel()
+
         if (this.voiceSupported) {
           if (this.isListening) {
             this.stopListening()
@@ -478,9 +468,7 @@ class VoiceSearchApp {
         }, 1000)
       }
 
-      this.isSpeaking = true
       speechSynthesis.speak(utterance)
-      this.isSpeaking = false
     } else {
       callback()
       setTimeout(() => {
@@ -504,10 +492,8 @@ class VoiceSearchApp {
           this.startListening()
         }
       }
-
-      this.isSpeaking = true
+      
       speechSynthesis.speak(utterance)
-      this.isSpeaking = false
     } else {
       if (this.voiceSupported && !this.isListening) {
         this.startListening()
