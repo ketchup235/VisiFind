@@ -389,7 +389,7 @@ class VoiceSearchApp {
   // update feedback text in frontend
   updateFeedback(message) {
     this.feedbackText.textContent = message
-    console.log("[v0] Feedback:", message)
+    console.log("Feedback:", message)
   }
 
   // show error message in feedback
