@@ -6,6 +6,7 @@ class VoiceSearchApp {
     this.currentQuery = ""
     this.recognition = null
     this.isListening = false
+    this.isSpeaking = false
     this.voiceSupported = false
     // initialize UI elements and voice recognition
     this.initializeElements()
@@ -295,6 +296,7 @@ class VoiceSearchApp {
         this.displayContent(data.content)
         this.updateFeedback(`Now reading "${data.content.title}"`)
         this.speakContent(data.content.content)
+        this.isSpeaking = false
       } else {
         this.showError("Failed to load content.")
       }
@@ -382,7 +384,9 @@ class VoiceSearchApp {
         }, 500)
       }
 
+      this.isSpeaking = true
       speechSynthesis.speak(utterance)
+      this.isSpeaking = false
     }
   }
 
@@ -403,6 +407,10 @@ class VoiceSearchApp {
 
   setupEventListeners() {
     this.voiceIndicator.addEventListener("click", () => {
+      if (this.isSpeaking) {
+        speechSynthesis.cancel()
+        this.isSpeaking = false
+      }
       if (this.isListening) {
         this.stopListening()
       } else {
@@ -418,6 +426,10 @@ class VoiceSearchApp {
     document.addEventListener("keydown", (e) => {
       if (e.key === " " && e.target === document.body) {
         e.preventDefault()
+        if (this.isSpeaking) {
+          speechSynthesis.cancel()
+          this.isSpeaking = false
+        }
         if (this.voiceSupported) {
           if (this.isListening) {
             this.stopListening()
@@ -466,7 +478,9 @@ class VoiceSearchApp {
         }, 1000)
       }
 
+      this.isSpeaking = true
       speechSynthesis.speak(utterance)
+      this.isSpeaking = false
     } else {
       callback()
       setTimeout(() => {
@@ -491,7 +505,9 @@ class VoiceSearchApp {
         }
       }
 
+      this.isSpeaking = true
       speechSynthesis.speak(utterance)
+      this.isSpeaking = false
     } else {
       if (this.voiceSupported && !this.isListening) {
         this.startListening()
